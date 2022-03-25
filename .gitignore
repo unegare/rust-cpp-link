@@ -1,1 +1,4 @@
-/target
+**/target
+**/*.o
+**/*.so
+**/*.swp

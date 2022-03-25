@@ -1,6 +1,6 @@
 //use libc::int_t;
 
-#[link(name = "mylib")]
+//#[link(name = "mylib")]
 extern "C" {
     fn add(a: i32, b: i32) -> i32;
 }
