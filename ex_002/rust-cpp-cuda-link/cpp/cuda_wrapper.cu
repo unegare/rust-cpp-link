@@ -6,17 +6,17 @@
 __global__ void cuda_func(double *dev_arr, size_t len) {
   size_t i = blockDim.x * blockIdx.x + threadIdx.x;
   size_t step = blockDim.x * gridDim.x;
-  printf(
-    "blockDim.x = %d | blockDim.y = %d | blockDim.z = %d\n"
-    "gridDim.x = %d | gridDim.y = %d | gridDim.z = %d\n",
-    blockDim.x, blockDim.y, blockDim.z,
-    gridDim.x, gridDim.y, gridDim.z);
+//  printf(
+//    "blockDim.x = %d | blockDim.y = %d | blockDim.z = %d\n"
+//    "gridDim.x = %d | gridDim.y = %d | gridDim.z = %d\n",
+//    blockDim.x, blockDim.y, blockDim.z,
+//    gridDim.x, gridDim.y, gridDim.z);
   while (i < len) {
     double tmp = dev_arr[i];
     dev_arr[i] = tmp*tmp*tmp;
     i += step;
   }
-  printf("Hello from cuda! (%d)\n", threadIdx.x);
+//  printf("Hello from cuda! (%d)\n", threadIdx.x);
 }
 
 extern "C" {
@@ -51,7 +51,7 @@ extern "C" {
       std::cout << __PRETTY_FUNCTION__ << ':' << __LINE__ << ": cudaMemcpy failed" << std::endl;
       return;
     }
-    cuda_func<<<3,3>>>(dev_arr, len);
+    cuda_func<<<512,512>>>(dev_arr, len);
     if (cudaMemcpy(host_arr, dev_arr, len*sizeof(double), cudaMemcpyDeviceToHost) != cudaSuccess) {
       std::cout << __PRETTY_FUNCTION__ << ':' << __LINE__ << ": cudaMemcpy failed" << std::endl;
       return;
@@ -64,8 +64,8 @@ extern "C" {
 //      }
 //    }
 
-    std::copy(host_arr, host_arr + len, std::ostream_iterator<double>(std::cout, ", "));
-    std::cout << std::endl;
+//    std::copy(host_arr, host_arr + len, std::ostream_iterator<double>(std::cout, ", "));
+//    std::cout << std::endl;
 
     cudaFree(dev_arr);
 //    free(host_arr);

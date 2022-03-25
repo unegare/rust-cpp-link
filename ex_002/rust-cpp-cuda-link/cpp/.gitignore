@@ -1,0 +1,3 @@
+main
+libcuda_wrapper.so
+*.o
