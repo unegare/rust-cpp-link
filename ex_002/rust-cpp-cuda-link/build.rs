@@ -1,6 +1,7 @@
 use std::process::Command;
 
 fn main() {
+    println!("cargo:rerun-if-changed=./cpp");
     Command::new("make")
         .current_dir("./cpp")
         .status()

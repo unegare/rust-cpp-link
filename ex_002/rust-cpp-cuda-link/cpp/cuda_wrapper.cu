@@ -12,23 +12,35 @@ __global__ void cuda_func(double *dev_arr, size_t len) {
     blockDim.x, blockDim.y, blockDim.z,
     gridDim.x, gridDim.y, gridDim.z);
   while (i < len) {
-    dev_arr[i] *= dev_arr[i];
+    double tmp = dev_arr[i];
+    dev_arr[i] = tmp*tmp*tmp;
     i += step;
   }
   printf("Hello from cuda! (%d)\n", threadIdx.x);
 }
 
 extern "C" {
-  void cuda_wrapper() {
-    size_t len = 100;
-    double *host_arr = (double*)malloc(len*sizeof(double));
+  void cuda_wrapper(double * const host_arr, size_t len) {
     if (!host_arr) {
-      std::cout << __PRETTY_FUNCTION__ << ':' << __LINE__ << ": malloc failed" << std::endl;
+      std::cout << __PRETTY_FUNCTION__ << ':' << __LINE__ << ": _host_arr == NULL" << std::endl;
       return;
     }
-    for (size_t i = 0; i < len; i++) {
-      host_arr[i] = i;
-    }
+//    size_t len;
+//    double *host_arr;
+//    if (_host_arr) {
+//      host_arr = _host_arr;
+//      len = _len;
+//    } else {
+//      len = 100;
+//      host_arr = (double*)malloc(len*sizeof(double));
+//      if (!host_arr) {
+//        std::cout << __PRETTY_FUNCTION__ << ':' << __LINE__ << ": malloc failed" << std::endl;
+//        return;
+//      }
+//      for (size_t i = 0; i < len; i++) {
+//        host_arr[i] = i;
+//      }
+//    }
 
     double *dev_arr = NULL;
     if (cudaMalloc((void**)&dev_arr, len*sizeof(double)) != cudaSuccess) {
@@ -46,16 +58,16 @@ extern "C" {
     }
     cudaDeviceSynchronize();
 
-    for (size_t i = 0; i < len; i++) {
-      if (host_arr[i] != i*i) {
-        std::cout << "i: " << i << " | " << host_arr[i] << " != " << i*i << std::endl;
-      }
-    }
+//    for (size_t i = 0; i < len; i++) {
+//      if (host_arr[i] != i*i) {
+//        std::cout << "i: " << i << " | " << host_arr[i] << " != " << i*i << std::endl;
+//      }
+//    }
 
     std::copy(host_arr, host_arr + len, std::ostream_iterator<double>(std::cout, ", "));
     std::cout << std::endl;
 
     cudaFree(dev_arr);
-    free(host_arr);
+//    free(host_arr);
   }
 }
