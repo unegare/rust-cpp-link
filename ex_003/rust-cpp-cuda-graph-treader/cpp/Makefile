@@ -22,9 +22,10 @@ ${TARGET}: ${OBJECTS} lib${TARGET_SHARED_LIB_NAME}.so
 lib${TARGET_SHARED_LIB_NAME}.so: ${CUOBJECTS} ${CUHEADERS}
 	nvcc -shared $(filter %.o, $^) -o lib${TARGET_SHARED_LIB_NAME}.so
 
-$(CUOBJECTS): % : ${CUSOURCES} ${CUHEADERS}
+$(CUOBJECTS): %.o : %.cu
 	@echo '-rdc=true serves the role of the separate compilation of the .cu files' > /dev/null
-	nvcc --verbose -rdc=true -std=c++17 -O2 -c $(addsuffix .cu,$(basename $@)) -o $(addsuffix .o,$(basename $@)) --compiler-options -fPIC
+	@#nvcc --verbose -rdc=true -std=c++17 -O2 -c $(addsuffix .cu,$(basename $@)) -o $(addsuffix .o,$(basename $@)) --compiler-options -fPIC
+	nvcc -rdc=true -std=c++17 -O2 -c $(addsuffix .cu,$(basename $@)) -o $(addsuffix .o,$(basename $@)) --compiler-options -fPIC
 
 ${CUOBJECTS}: ${CUHEADERS}
 
