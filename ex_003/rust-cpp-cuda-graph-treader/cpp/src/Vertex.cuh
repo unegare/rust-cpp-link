@@ -19,19 +19,24 @@ class Vertex {//: virtual public VertexBaseClass {
 protected:
 	__device__ EdgeStateBuilder<T>& _getBuilderIn(size_t ind);
 	__device__ EdgeStateBuilder<T>& _getBuilderOut(size_t ind);
+  __device__ bool _resize(size_t len);
 public:
-  __device__ Vertex() = delete;
+  __device__ Vertex();
   __device__ Vertex(size_t);
-  __device__ ~Vertex();
+  __device__ virtual ~Vertex();
   __device__ CUDAErrorType getErrorType() const;
   __device__ bool isOk() const;
   __device__ EdgeState<T>& getIn(size_t ind);
   __device__ EdgeState<T>& getOut(size_t ind);
   __device__ size_t getHasherLen() const;
+  __device__ void reset();
 };
 
 template<typename T>
-__device__ Vertex<T>::Vertex(size_t _hasher_len): hasher_len(_hasher_len), in(nullptr), out(nullptr) {
+__device__ Vertex<T>::Vertex(): in(nullptr), out(nullptr), hasher_len(0), err(CUDAErrorType::NoError) { }
+
+template<typename T>
+__device__ Vertex<T>::Vertex(size_t _hasher_len): in(nullptr), out(nullptr), hasher_len(_hasher_len), err(CUDAErrorType::NoError) {
   printf("%s\n", __PRETTY_FUNCTION__);
   in = ::new EdgeStateBuilder<T>[hasher_len];
   out = ::new EdgeStateBuilder<T>[hasher_len];
@@ -41,8 +46,6 @@ __device__ Vertex<T>::Vertex(size_t _hasher_len): hasher_len(_hasher_len), in(nu
     in = nullptr;
     out = nullptr;
     err = CUDAErrorType::MallocError;
-  } else {
-    err = CUDAErrorType::NoError;
   }
 // useless since !!! cudaFree !!! is NOT FOUND for __device__ code
 //  if (cudaMalloc(&in, sizeof(T)*hasher_len) != cudaSuccess) {
@@ -92,6 +95,14 @@ __device__ size_t Vertex<T>::getHasherLen() const {
 }
 
 template<typename T>
+__device__ void Vertex<T>::reset() {
+  for (size_t i = 0; i < hasher_len; i++) {
+    in[i].getReadiness().reset();
+    out[i].getReadiness().reset();
+  }
+}
+
+template<typename T>
 __device__ EdgeStateBuilder<T>& Vertex<T>::_getBuilderIn(size_t ind) {
 	return static_cast<EdgeStateBuilder<T>&>(in[ind]);
 }
@@ -102,18 +113,42 @@ __device__ EdgeStateBuilder<T>& Vertex<T>::_getBuilderOut(size_t ind) {
 }
 
 template<typename T>
+__device__ bool Vertex<T>::_resize(size_t len) {
+  EdgeStateBuilder<T> *_in = new EdgeStateBuilder<T>[len];
+  EdgeStateBuilder<T> *_out = new EdgeStateBuilder<T>[len];
+  if (!_in || !_out) {
+    delete[] _in;
+    delete[] _out;
+    return false;
+  }
+  hasher_len = len;
+  delete[] in;
+  delete[] out;
+  in = _in;
+  out = _out;
+  return true;
+}
+
+template<typename T>
 class VertexBuilder: public Vertex<T> {
 public:
 	using Vertex<T>::Vertex;
-	__device__ ~VertexBuilder();
+//  VertexBuilder();
+//	__device__ ~VertexBuilder();
 	__device__ EdgeStateBuilder<T>& getBuilderIn(size_t ind);
 	__device__ EdgeStateBuilder<T>& getBuilderOut(size_t ind);
+  __device__ bool resize(size_t ind);
 };
 
-template<typename T>
-__device__ VertexBuilder<T>::~VertexBuilder() {
-	
-}
+//template<typename T>
+//VertexBuilder<T>::VertexBuilder(): Vertex<T>() {
+//  
+//}
+
+//template<typename T>
+//__device__ VertexBuilder<T>::~VertexBuilder() {
+//	
+//}
 
 template<typename T>
 __device__ EdgeStateBuilder<T>& VertexBuilder<T>::getBuilderIn(size_t ind) {
@@ -123,6 +158,11 @@ __device__ EdgeStateBuilder<T>& VertexBuilder<T>::getBuilderIn(size_t ind) {
 template<typename T>
 __device__ EdgeStateBuilder<T>& VertexBuilder<T>::getBuilderOut(size_t ind) {
 	return this->_getBuilderOut(ind);
+}
+
+template<typename T>
+__device__ bool VertexBuilder<T>::resize(size_t ind) {
+  return Vertex<T>::_resize(ind);
 }
 
 #endif

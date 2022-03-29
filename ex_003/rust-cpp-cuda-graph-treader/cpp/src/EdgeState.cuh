@@ -24,6 +24,7 @@ template<typename T>
 class EdgeStateBuilder: public EdgeState<T> {
 public:
   using EdgeState<T>::EdgeState;
+	__device__ virtual ~EdgeStateBuilder() override;
   __device__ EdgeStateBuilder();
   __device__ NumOutOfBuilder& getNumOutOfBuilder();
 };
@@ -52,6 +53,8 @@ __device__ NumOutOfBuilder& EdgeState<T>::_getNumOutOfBuilder() {
 
 template<typename T>
 __device__ EdgeStateBuilder<T>::EdgeStateBuilder(): EdgeState<T>(0, 0) { }
+template<typename T>
+__device__ EdgeStateBuilder<T>::~EdgeStateBuilder() { }
 template<typename T>
 __device__ NumOutOfBuilder& EdgeStateBuilder<T>::getNumOutOfBuilder() {
   return this->_getNumOutOfBuilder();
